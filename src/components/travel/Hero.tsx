@@ -30,7 +30,8 @@ export function Hero() {
       <div className="absolute inset-0 bg-gradient-to-r from-background/55 via-transparent to-background/35" />
 
       <div className="relative mx-auto w-full max-w-7xl px-4 pt-32 pb-20 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-3xl text-center">
+        <div className="glass mx-auto max-w-3xl rounded-[2.5rem] px-6 py-10 text-center shadow-lift sm:px-12 sm:py-14">
+          <span className="sr-only">Travel Planner</span>
           <span className="glass inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold text-foreground shadow-soft sm:text-sm">
             <Sparkles className="h-4 w-4 text-primary" aria-hidden />
             One workspace for every part of your trip
