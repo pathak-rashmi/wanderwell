@@ -74,14 +74,19 @@ export function Dashboard({ packing }: { packing: PackCategory[] }) {
                 ${total.toLocaleString()} tracked
               </span>
             </div>
-            <div className="mt-6 flex h-44 items-end gap-3">
+            <div className="mt-6 flex h-52 items-stretch gap-3">
               {expenses.map((e) => (
-                <div key={e.label} className="flex min-w-0 flex-1 flex-col items-center gap-2">
+                <div
+                  key={e.label}
+                  className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-2"
+                >
                   <span className="text-xs font-semibold tabular-nums">${e.value}</span>
-                  <span
-                    className="gradient-brand w-full rounded-t-xl transition-all duration-700"
-                    style={{ height: `${(e.value / max) * 100}%` }}
-                  />
+                  <div className="flex h-full w-full items-end">
+                    <span
+                      className="gradient-brand w-full rounded-t-xl transition-all duration-700"
+                      style={{ height: `${(e.value / max) * 100}%` }}
+                    />
+                  </div>
                   <span className="w-full truncate text-center text-[11px] text-muted-foreground">
                     {e.label}
                   </span>

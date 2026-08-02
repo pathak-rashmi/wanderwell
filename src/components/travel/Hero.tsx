@@ -26,11 +26,8 @@ export function Hero() {
         height={1200}
         className="absolute inset-0 h-full w-full object-cover"
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-background/85 via-background/60 to-background" />
-      <div
-        className="absolute inset-0 opacity-70 mix-blend-soft-light gradient-aurora"
-        aria-hidden
-      />
+      <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/25 to-background" />
+      <div className="absolute inset-0 bg-gradient-to-r from-background/55 via-transparent to-background/35" />
 
       <div className="relative mx-auto w-full max-w-7xl px-4 pt-32 pb-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
