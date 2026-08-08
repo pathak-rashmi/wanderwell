@@ -8,7 +8,6 @@ import {
   MapPin,
   RefreshCw,
   Save,
-  Sparkles,
   Users,
   Wand2,
 } from "lucide-react";
@@ -94,8 +93,8 @@ export function TripPlanner() {
     <Section id="planner" className="gradient-aurora py-16">
       <SectionHeader
         eyebrow="Trip Planner"
-        title="AI-Powered Trip Generator"
-        description="Enter your destination, dates, budget and preferences — Gemini AI creates a personalized itinerary and cost plan instantly."
+        title="Smart Trip Generator"
+        description="Enter your destination, dates, budget and preferences — generates a personalized itinerary and cost plan instantly."
       />
 
       <Reveal className="mt-10">
@@ -289,12 +288,12 @@ export function TripPlanner() {
               {itineraryLoading ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Generating Itinerary with Gemini AI...
+                  Generating Itinerary Plan...
                 </>
               ) : (
                 <>
                   <Wand2 className="mr-2 h-5 w-5" />
-                  Generate AI Trip
+                  Generate Trip Plan
                 </>
               )}
             </Button>

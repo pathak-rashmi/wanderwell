@@ -1,18 +1,18 @@
 import { supabase } from "@/lib/supabase";
-import type { GeneratedItinerary } from "./aiItineraryService";
+import type { GeneratedItinerary } from "./itineraryService";
 
 export type SavedTrip = {
-  id?: string;
-  user_id?: string;
+  id?: string | undefined;
+  user_id?: string | undefined;
   destination: string;
-  start_date?: string;
-  end_date?: string;
-  travelers?: number;
-  budget?: number;
-  travel_style?: string;
+  start_date?: string | undefined;
+  end_date?: string | undefined;
+  travelers?: number | undefined;
+  budget?: number | undefined;
+  travel_style?: string | undefined;
   itinerary: GeneratedItinerary | Record<string, any>;
-  created_at?: string;
-  updated_at?: string;
+  created_at?: string | undefined;
+  updated_at?: string | undefined;
 };
 
 export async function saveTripToSupabase(tripData: SavedTrip) {
@@ -26,11 +26,14 @@ export async function saveTripToSupabase(tripData: SavedTrip) {
     // Guest mode
   }
 
-  const payload = {
+  const startDate = tripData.start_date || new Date().toISOString().split("T")[0] || "2026-08-08";
+  const endDate = tripData.end_date || new Date(Date.now() + 86400000 * 4).toISOString().split("T")[0] || "2026-08-12";
+
+  const payload: SavedTrip = {
     user_id: userId || "guest",
     destination: tripData.destination,
-    start_date: tripData.start_date || new Date().toISOString().split("T")[0],
-    end_date: tripData.end_date || new Date(Date.now() + 86400000 * 4).toISOString().split("T")[0],
+    start_date: startDate,
+    end_date: endDate,
     travelers: tripData.travelers || 1,
     budget: tripData.budget || 0,
     travel_style: tripData.travel_style || "General",
@@ -52,7 +55,7 @@ export async function saveTripToSupabase(tripData: SavedTrip) {
   try {
     const existingStr = localStorage.getItem("wanderwell_saved_trips") || "[]";
     const existing = JSON.parse(existingStr) as SavedTrip[];
-    const newTrip = { ...payload, id: `trip_${Date.now()}` };
+    const newTrip: SavedTrip = { ...payload, id: `trip_${Date.now()}` };
     existing.unshift(newTrip);
     localStorage.setItem("wanderwell_saved_trips", JSON.stringify(existing));
     return newTrip;

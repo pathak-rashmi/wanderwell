@@ -12,7 +12,6 @@ import {
   Sparkles,
   Trash2,
   UtensilsCrossed,
-  Wand2,
   X,
 } from "lucide-react";
 import { initialItinerary, type ActivityKind } from "@/lib/travel-data";
@@ -30,29 +29,25 @@ const kindIcon: Record<ActivityKind, typeof Coffee> = {
   shopping: ShoppingBag,
 };
 
-const kinds = Object.keys(kindIcon) as ActivityKind[];
-
 export function Itinerary() {
   const { itinerary, updateActivity, addActivity, deleteActivity } = useTrip();
 
-  // Local fallback state if no AI itinerary is generated
+  // Local fallback state if no itinerary is generated
   const [localDays, setLocalDays] = useState(initialItinerary);
   const [activeDayNum, setActiveDayNum] = useState<number>(1);
   const [activeLocalDay, setActiveLocalDay] = useState<string>("Day 1");
 
-  const [dragId, setDragId] = useState<string | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editingLocalId, setEditingLocalId] = useState<string | null>(null);
 
   const [draftText, setDraftText] = useState("");
   const [newTitle, setNewTitle] = useState("");
   const [newTime, setNewTime] = useState("09:00");
-  const [newKind, setNewKind] = useState<ActivityKind>("sightseeing");
 
-  const hasAiItinerary = Boolean(itinerary && itinerary.days && itinerary.days.length > 0);
+  const hasItinerary = Boolean(itinerary && itinerary.days && itinerary.days.length > 0);
 
   // Get active day data
-  const currentAiDay = hasAiItinerary
+  const currentPlanDay = hasItinerary
     ? itinerary?.days.find((d) => d.day === activeDayNum) || itinerary?.days[0]
     : null;
 
@@ -63,24 +58,24 @@ export function Itinerary() {
       <SectionHeader
         eyebrow="Itinerary"
         title={
-          hasAiItinerary
+          hasItinerary
             ? `${itinerary?.destination} Day-by-Day Timeline`
             : "Build your day, hour by hour"
         }
         description={
-          hasAiItinerary
-            ? itinerary?.summary || "AI generated itinerary with cost breakdowns and daily timeline."
+          hasItinerary
+            ? itinerary?.summary || "Generated itinerary with cost breakdowns and daily timeline."
             : "Add, edit, reorder and delete activities on a clean timeline."
         }
       />
 
       <Reveal className="mt-12">
-        {/* Banner if AI itinerary is active */}
-        {hasAiItinerary && (
+        {/* Banner if trip plan is active */}
+        {hasItinerary && (
           <div className="gradient-brand mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl p-4 text-primary-foreground shadow-glow">
             <div className="flex items-center gap-2 text-sm font-semibold">
               <Sparkles className="h-4 w-4" />
-              <span>AI Trip Plan for {itinerary?.destination}</span>
+              <span>Trip Plan for {itinerary?.destination}</span>
             </div>
             {itinerary?.tips && itinerary.tips.length > 0 ? (
               <p className="text-xs opacity-90">💡 Tip: {itinerary.tips[0]}</p>
@@ -90,7 +85,7 @@ export function Itinerary() {
 
         {/* Day Selection Tabs */}
         <div className="flex flex-wrap gap-2">
-          {hasAiItinerary
+          {hasItinerary
             ? itinerary?.days.map((d) => (
                 <button
                   key={d.day}
@@ -125,21 +120,21 @@ export function Itinerary() {
               ))}
         </div>
 
-        {hasAiItinerary && currentAiDay?.title ? (
+        {hasItinerary && currentPlanDay?.title ? (
           <h3 className="mt-4 font-display text-lg font-bold text-foreground">
-            {currentAiDay.title}
+            {currentPlanDay.title}
           </h3>
         ) : null}
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[1.5fr_1fr]">
           {/* Timeline List */}
           <ol className="relative space-y-3 border-l border-dashed border-border pl-6">
-            {hasAiItinerary && currentAiDay
-              ? currentAiDay.activities.map((act, actIdx) => {
+            {hasItinerary && currentPlanDay
+              ? currentPlanDay.activities.map((act, actIdx) => {
                   const isEditing = editingIndex === actIdx;
                   return (
                     <li
-                      key={`${currentAiDay.day}-${actIdx}`}
+                      key={`${currentPlanDay.day}-${actIdx}`}
                       className="group relative rounded-3xl border border-border bg-card p-4 shadow-soft transition-all duration-300 hover:shadow-lift"
                     >
                       <span className="gradient-brand absolute top-6 -left-[1.9rem] grid h-8 w-8 place-items-center rounded-full text-primary-foreground shadow-glow">
@@ -187,7 +182,7 @@ export function Itinerary() {
                                 variant="ghost"
                                 aria-label="Save activity"
                                 onClick={() => {
-                                  updateActivity(currentAiDay.day, actIdx, draftText || act.place);
+                                  updateActivity(currentPlanDay.day, actIdx, draftText || act.place);
                                   setEditingIndex(null);
                                 }}
                               >
@@ -219,7 +214,7 @@ export function Itinerary() {
                                 size="icon"
                                 variant="ghost"
                                 aria-label={`Delete ${act.place}`}
-                                onClick={() => deleteActivity(currentAiDay.day, actIdx)}
+                                onClick={() => deleteActivity(currentPlanDay.day, actIdx)}
                               >
                                 <Trash2 className="h-4 w-4 text-destructive" />
                               </Button>
@@ -323,9 +318,9 @@ export function Itinerary() {
                   );
                 })}
 
-            {hasAiItinerary && currentAiDay?.activities.length === 0 ? (
+            {hasItinerary && currentPlanDay?.activities.length === 0 ? (
               <li className="rounded-3xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-                No activities planned yet for Day {currentAiDay.day}.
+                No activities planned yet for Day {currentPlanDay.day}.
               </li>
             ) : null}
           </ol>
@@ -335,8 +330,8 @@ export function Itinerary() {
             onSubmit={(e) => {
               e.preventDefault();
               if (!newTitle.trim()) return;
-              if (hasAiItinerary && currentAiDay) {
-                addActivity(currentAiDay.day, newTime, newTitle.trim(), newTitle.trim());
+              if (hasItinerary && currentPlanDay) {
+                addActivity(currentPlanDay.day, newTime, newTitle.trim(), newTitle.trim());
               } else {
                 setLocalDays((prev) => ({
                   ...prev,
@@ -346,7 +341,7 @@ export function Itinerary() {
                       id: `${Date.now()}`,
                       time: newTime,
                       title: newTitle.trim(),
-                      kind: newKind,
+                      kind: "sightseeing",
                     },
                   ],
                 }));
@@ -356,7 +351,7 @@ export function Itinerary() {
             className="glass h-fit rounded-3xl p-6 shadow-soft"
           >
             <h3 className="font-display text-lg font-semibold">
-              Add activity to {hasAiItinerary ? `Day ${activeDayNum}` : activeLocalDay}
+              Add activity to {hasItinerary ? `Day ${activeDayNum}` : activeLocalDay}
             </h3>
 
             <label htmlFor="act-time" className="mt-5 block text-xs font-medium">

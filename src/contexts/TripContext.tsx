@@ -8,10 +8,10 @@ import {
 import { fetchWeather, type WeatherData } from "@/services/weatherService";
 import { searchDestinations, type DestinationSearchResult } from "@/services/geocodingService";
 import {
-  generateItineraryWithGemini,
+  generateItinerary,
   type GeneratedItinerary,
   type ItineraryRequestInput,
-} from "@/services/aiItineraryService";
+} from "@/services/itineraryService";
 import { saveTripToSupabase } from "@/services/tripService";
 import { toast } from "sonner";
 
@@ -23,9 +23,9 @@ export type TripParams = {
   budget: number;
   travelStyle: string;
   interests: string[];
-  latitude?: number;
-  longitude?: number;
-  country?: string;
+  latitude?: number | undefined;
+  longitude?: number | undefined;
+  country?: string | undefined;
 };
 
 export type SelectedDestination = {
@@ -50,7 +50,7 @@ type TripContextType = {
   weatherError: string | null;
   refetchWeather: () => Promise<void>;
 
-  // Itinerary & AI state
+  // Itinerary state
   itinerary: GeneratedItinerary | null;
   itineraryLoading: boolean;
   itineraryError: string | null;
@@ -216,7 +216,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
         interests: activeParams.interests,
       };
 
-      const result = await generateItineraryWithGemini(reqInput);
+      const result = await generateItinerary(reqInput);
       setItinerary(result);
 
       // Update budgets dynamically from generated trip
@@ -232,11 +232,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
         });
       }
 
-      toast.success(
-        result.isAiGenerated
-          ? `Gemini generated a ${numDays}-day itinerary for ${activeParams.destination}!`
-          : `Created a ${numDays}-day trip plan for ${activeParams.destination}!`,
-      );
+      toast.success(`Created a ${numDays}-day trip plan for ${activeParams.destination}!`);
     } catch (err: any) {
       console.error("Error generating trip:", err);
       setItineraryError("Failed to generate itinerary. Please try again.");
@@ -270,7 +266,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
       toast.success(`Saved trip to ${tripParams.destination} in your account!`);
     } catch (err: any) {
       console.error("Error saving trip:", err);
-      toast.error(err?.message || "Failed to save trip. Please make sure you are logged in.");
+      toast.error(err?.message || "Failed to save trip. Please try again.");
     } finally {
       setIsSaving(false);
     }
