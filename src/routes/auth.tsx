@@ -10,7 +10,7 @@ export const Route = createFileRoute("/auth")({ component: AuthPage });
 
 function AuthPage() {
   const navigate = useNavigate();
-  const { user, loading, signInWithGoogle, signInWithOtp, verifyOtp } = useAuth();
+  const { user, loading, error: authError, signInWithGoogle, signInWithOtp, verifyOtp } = useAuth();
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
@@ -81,6 +81,7 @@ function AuthPage() {
           <div className="my-6 flex items-center gap-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground"><span className="h-px flex-1 bg-border" />or email code<span className="h-px flex-1 bg-border" /></div>
           <div className="space-y-2"><Label htmlFor="auth-email">Email address</Label><div className="relative"><Mail className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input id="auth-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" className="h-11 rounded-xl pl-10" autoComplete="email" /></div></div>
           {!otpSent ? <Button type="button" className="gradient-brand mt-4 h-11 w-full rounded-xl text-primary-foreground" onClick={() => void sendOtp()} disabled={busy || !email.trim()}>{busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Send OTP<ArrowRight className="ml-2 h-4 w-4" /></Button> : <div className="mt-4 space-y-3"><div className="space-y-2"><Label htmlFor="auth-otp">Verification code</Label><Input id="auth-otp" inputMode="numeric" maxLength={6} value={otp} onChange={(event) => setOtp(event.target.value.replace(/\D/g, ""))} placeholder="123456" className="h-11 rounded-xl text-center text-lg tracking-[0.35em]" /></div><Button type="button" className="gradient-brand h-11 w-full rounded-xl text-primary-foreground" onClick={() => void verify()} disabled={busy || otp.length !== 6}>{busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Verify OTP</Button><button type="button" className="w-full text-center text-sm font-semibold text-primary hover:underline" onClick={() => { setOtpSent(false); setOtp(""); }}>Use a different email</button></div>}
+          {authError ? <p role="alert" className="mt-4 rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">We could not finish loading your session. Please refresh and try again.</p> : null}
           {message ? <p role="status" className={`mt-4 rounded-xl px-3 py-2 text-sm ${message.type === "error" ? "bg-destructive/10 text-destructive" : "bg-emerald/10 text-emerald"}`}>{message.text}</p> : null}
           <p className="mt-7 text-center text-xs leading-5 text-muted-foreground">By continuing, you agree to keep your travel plans kind, curious, and yours.</p>
         </section>

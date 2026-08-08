@@ -4,25 +4,26 @@ import type { PackCategory } from "@/lib/travel-data";
 import { useCountdown } from "@/hooks/use-travel";
 import { Progress } from "@/components/ui/progress";
 import { Reveal, Section, SectionHeader } from "./Section";
-
-const expenses = [
-  { label: "Flights", value: 850 },
-  { label: "Hotels", value: 1200 },
-  { label: "Food", value: 480 },
-  { label: "Transport", value: 220 },
-  { label: "Activities", value: 390 },
-  { label: "Shopping", value: 260 },
-];
+import { useTrip } from "@/contexts/TripContext";
 
 const tasks = [
   { label: "Confirm airport transfer", due: "in 2 days" },
   { label: "Download offline maps", due: "in 4 days" },
-  { label: "Exchange €200 cash", due: "in 5 days" },
+  { label: "Exchange local cash", due: "in 5 days" },
   { label: "Check-in online", due: "in 9 days" },
 ];
 
 export function Dashboard({ packing }: { packing: PackCategory[] }) {
-  const tripDate = useMemo(() => new Date(Date.now() + 1000 * 60 * 60 * 24 * 24), []);
+  const { tripParams, selectedDestination, itinerary, budgets, totalBudgetCost } = useTrip();
+
+  const tripDate = useMemo(() => {
+    if (tripParams.startDate) {
+      const d = new Date(tripParams.startDate);
+      if (!isNaN(d.getTime())) return d;
+    }
+    return new Date(Date.now() + 1000 * 60 * 60 * 24 * 14);
+  }, [tripParams.startDate]);
+
   const { days, hours, minutes, seconds } = useCountdown(tripDate);
 
   const items = packing.flatMap((c) => c.items);
@@ -30,16 +31,40 @@ export function Dashboard({ packing }: { packing: PackCategory[] }) {
     ? Math.round((items.filter((i) => i.done).length / items.length) * 100)
     : 0;
 
-  const total = expenses.reduce((a, b) => a + b.value, 0);
-  const max = Math.max(...expenses.map((e) => e.value));
+  const totalActivitiesCount = useMemo(() => {
+    if (!itinerary || !itinerary.days) return 10;
+    return itinerary.days.reduce((acc, curr) => acc + (curr.activities ? curr.activities.length : 0), 0);
+  }, [itinerary]);
+
+  const durationDays = useMemo(() => {
+    if (itinerary && itinerary.days) return itinerary.days.length;
+    if (tripParams.startDate && tripParams.endDate) {
+      const s = new Date(tripParams.startDate);
+      const e = new Date(tripParams.endDate);
+      const diff = Math.ceil(Math.abs(e.getTime() - s.getTime()) / (1000 * 3600 * 24)) + 1;
+      return isNaN(diff) ? 6 : diff;
+    }
+    return 6;
+  }, [itinerary, tripParams]);
+
+  const expensesList = [
+    { label: "Flights", value: budgets["flights"] || 0 },
+    { label: "Hotels", value: budgets["hotels"] || 0 },
+    { label: "Food", value: budgets["food"] || 0 },
+    { label: "Transport", value: budgets["transport"] || 0 },
+    { label: "Activities", value: budgets["activities"] || 0 },
+    { label: "Shopping", value: budgets["shopping"] || 0 },
+  ];
+
+  const maxVal = Math.max(...expensesList.map((e) => e.value), 1);
 
   const stats = [
-    { icon: MapPin, label: "Destination", value: "Santorini" },
+    { icon: MapPin, label: "Destination", value: selectedDestination.name || tripParams.destination },
     { icon: CalendarDays, label: "Days remaining", value: `${days}` },
-    { icon: Wallet, label: "Budget used", value: "76%" },
+    { icon: Wallet, label: "Budget planned", value: `$${totalBudgetCost.toLocaleString()}` },
     { icon: CheckCircle2, label: "Packing progress", value: `${packedPct}%` },
-    { icon: NotebookPen, label: "Activities planned", value: "10" },
-    { icon: Timer, label: "Trip duration", value: "6 days" },
+    { icon: NotebookPen, label: "Activities planned", value: `${totalActivitiesCount}` },
+    { icon: Timer, label: "Trip duration", value: `${durationDays} days` },
   ];
 
   return (
@@ -61,7 +86,7 @@ export function Dashboard({ packing }: { packing: PackCategory[] }) {
                 <span className="grid h-10 w-10 place-items-center rounded-xl bg-secondary text-primary">
                   <s.icon className="h-5 w-5" aria-hidden />
                 </span>
-                <div className="mt-4 font-display text-2xl font-bold">{s.value}</div>
+                <div className="mt-4 font-display text-2xl font-bold truncate">{s.value}</div>
                 <div className="text-xs text-muted-foreground">{s.label}</div>
               </div>
             ))}
@@ -69,13 +94,13 @@ export function Dashboard({ packing }: { packing: PackCategory[] }) {
 
           <div className="mt-6 rounded-3xl border border-border bg-card p-6 shadow-soft">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <h3 className="font-display text-lg font-semibold">Expenses</h3>
+              <h3 className="font-display text-lg font-semibold">Expenses Breakdown</h3>
               <span className="text-sm text-muted-foreground">
-                ${total.toLocaleString()} tracked
+                ${totalBudgetCost.toLocaleString()} tracked
               </span>
             </div>
             <div className="mt-6 flex h-52 items-stretch gap-3">
-              {expenses.map((e) => (
+              {expensesList.map((e) => (
                 <div
                   key={e.label}
                   className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-2"
@@ -84,7 +109,7 @@ export function Dashboard({ packing }: { packing: PackCategory[] }) {
                   <div className="flex h-full w-full items-end">
                     <span
                       className="gradient-brand w-full rounded-t-xl transition-all duration-700"
-                      style={{ height: `${(e.value / max) * 100}%` }}
+                      style={{ height: `${(e.value / maxVal) * 100}%` }}
                     />
                   </div>
                   <span className="w-full truncate text-center text-[11px] text-muted-foreground">
@@ -141,7 +166,7 @@ export function Dashboard({ packing }: { packing: PackCategory[] }) {
             <textarea
               id="notes"
               rows={4}
-              defaultValue="Book Oia sunset table for the 14th. Ferry tickets are cheaper booked two days ahead."
+              defaultValue={`Planning ${durationDays}-day trip to ${selectedDestination.name || tripParams.destination}. Save tickets and passport scans in your mobile wallet.`}
               className="mt-3 w-full resize-none rounded-2xl border border-border bg-background p-3 text-sm outline-none"
             />
           </div>

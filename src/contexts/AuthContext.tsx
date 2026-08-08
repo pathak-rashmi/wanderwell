@@ -12,6 +12,7 @@ type AuthContextValue = {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  error: Error | null;
   signInWithOtp: (email: string) => Promise<{ error: Error | null }>;
   verifyOtp: (email: string, token: string) => Promise<{ error: Error | null }>;
   signInWithGoogle: () => Promise<{ error: Error | null }>;
@@ -40,30 +41,57 @@ async function syncProfile(user: User) {
     { onConflict: "id" },
   );
 
-  if (error) console.error("Unable to sync profile", error);
+  if (error) throw error;
+}
+
+function clearOAuthHash() {
+  if (typeof window === "undefined") return;
+  const hash = window.location.hash;
+  if (!hash.includes("access_token=") && !hash.includes("refresh_token=") && !hash.includes("error=")) {
+    return;
+  }
+
+  window.history.replaceState({}, document.title, `${window.location.pathname}${window.location.search}`);
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState<Error | null>(null);
 
   useEffect(() => {
     let active = true;
 
-    void supabase.auth.getSession().then(({ data }) => {
-      if (!active) return;
-      setSession(data.session);
-      setLoading(false);
-      if (data.session?.user) void syncProfile(data.session.user);
-    });
-
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, nextSession) => {
+      if (!active) return;
       setSession(nextSession);
       setLoading(false);
-      if (nextSession?.user && event !== "TOKEN_REFRESHED") void syncProfile(nextSession.user);
+      setAuthError(null);
+      if (nextSession?.user && (event === "SIGNED_IN" || event === "INITIAL_SESSION")) {
+        void syncProfile(nextSession.user).catch((error: unknown) => setAuthError(toError(error)));
+      }
     });
+
+    void supabase.auth
+      .getSession()
+      .then(({ data, error }) => {
+        if (!active) return;
+        if (error) setAuthError(toError(error));
+        setSession(data.session);
+        setLoading(false);
+        clearOAuthHash();
+        if (data.session?.user) {
+          void syncProfile(data.session.user).catch((profileError: unknown) => setAuthError(toError(profileError)));
+        }
+      })
+      .catch((error: unknown) => {
+        if (!active) return;
+        setAuthError(toError(error));
+        setLoading(false);
+        clearOAuthHash();
+      });
 
     return () => {
       active = false;
@@ -75,6 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user: session?.user ?? null,
     session,
     loading,
+    error: authError,
     signInWithOtp: async (email) => {
       const { error } = await supabase.auth.signInWithOtp({
         email,

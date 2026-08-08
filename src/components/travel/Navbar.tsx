@@ -7,9 +7,9 @@ import { useAuth } from "@/contexts/AuthContext";
 const links = [
   { label: "Home", href: "#home" },
   { label: "Destinations", href: "#destinations" },
+  { label: "Planner", href: "#planner" },
   { label: "Budget", href: "#budget" },
   { label: "Itinerary", href: "#itinerary" },
-  { label: "Packing", href: "#packing" },
   { label: "Weather", href: "#weather" },
   { label: "Dashboard", href: "#dashboard" },
 ];
@@ -30,6 +30,10 @@ export function Navbar() {
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
   }, [dark]);
+
+  const displayName = user
+    ? user.user_metadata["full_name"] || user.email?.split("@")[0] || "Traveler"
+    : "Traveler";
 
   return (
     <header
@@ -75,13 +79,35 @@ export function Navbar() {
           >
             {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
+
           <div className="hidden items-center gap-2 sm:flex">
-            <span className="max-w-32 truncate text-sm font-semibold" title={user?.email ?? ""}>
-              {user?.user_metadata["full_name"] ?? user?.email}
+            <span className="max-w-32 truncate text-sm font-semibold" title={user?.email ?? "Traveler"}>
+              {displayName}
             </span>
-            {user?.user_metadata["avatar_url"] ? <img src={String(user.user_metadata["avatar_url"])} alt="" className="h-8 w-8 rounded-full object-cover" /> : <span className="grid h-8 w-8 place-items-center rounded-full bg-secondary text-primary"><UserRound className="h-4 w-4" /></span>}
-            <Button variant="ghost" size="icon" className="rounded-xl" aria-label="Log out" onClick={() => void signOut()}><LogOut className="h-4 w-4" /></Button>
+            {user?.user_metadata?.["avatar_url"] ? (
+              <img
+                src={String(user.user_metadata["avatar_url"])}
+                alt=""
+                className="h-8 w-8 rounded-full object-cover"
+              />
+            ) : (
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-secondary text-primary">
+                <UserRound className="h-4 w-4" />
+              </span>
+            )}
+            {user ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-xl"
+                aria-label="Log out"
+                onClick={() => void signOut()}
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            ) : null}
           </div>
+
           <Button
             variant="ghost"
             size="icon"
@@ -111,8 +137,24 @@ export function Navbar() {
             ))}
           </ul>
           <div className="mt-2 flex items-center justify-between gap-2 rounded-xl border border-border bg-card px-3 py-2">
-            <span className="flex min-w-0 items-center gap-2 text-sm font-semibold"><UserRound className="h-4 w-4 shrink-0 text-primary" /><span className="truncate">{user?.email}</span></span>
-            <Button variant="ghost" size="icon" className="rounded-xl" aria-label="Log out" onClick={() => { setOpen(false); void signOut(); }}><LogOut className="h-4 w-4" /></Button>
+            <span className="flex min-w-0 items-center gap-2 text-sm font-semibold">
+              <UserRound className="h-4 w-4 shrink-0 text-primary" />
+              <span className="truncate">{user?.email || "Traveler Mode"}</span>
+            </span>
+            {user ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-xl"
+                aria-label="Log out"
+                onClick={() => {
+                  setOpen(false);
+                  void signOut();
+                }}
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            ) : null}
           </div>
         </div>
       ) : null}
