@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Globe2, Menu, Moon, Sun, X } from "lucide-react";
+import { Globe2, LogOut, Menu, Moon, Sun, UserRound, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 const links = [
   { label: "Home", href: "#home" },
@@ -17,6 +18,7 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [dark, setDark] = useState(false);
+  const { user, signOut } = useAuth();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -73,12 +75,13 @@ export function Navbar() {
           >
             {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
-          <Button variant="ghost" className="hidden rounded-xl sm:inline-flex">
-            Login
-          </Button>
-          <Button className="ripple gradient-brand hidden rounded-xl text-primary-foreground shadow-glow hover:opacity-95 sm:inline-flex">
-            Get Started
-          </Button>
+          <div className="hidden items-center gap-2 sm:flex">
+            <span className="max-w-32 truncate text-sm font-semibold" title={user?.email ?? ""}>
+              {user?.user_metadata["full_name"] ?? user?.email}
+            </span>
+            {user?.user_metadata["avatar_url"] ? <img src={String(user.user_metadata["avatar_url"])} alt="" className="h-8 w-8 rounded-full object-cover" /> : <span className="grid h-8 w-8 place-items-center rounded-full bg-secondary text-primary"><UserRound className="h-4 w-4" /></span>}
+            <Button variant="ghost" size="icon" className="rounded-xl" aria-label="Log out" onClick={() => void signOut()}><LogOut className="h-4 w-4" /></Button>
+          </div>
           <Button
             variant="ghost"
             size="icon"
@@ -107,13 +110,9 @@ export function Navbar() {
               </li>
             ))}
           </ul>
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            <Button variant="outline" className="rounded-xl">
-              Login
-            </Button>
-            <Button className="gradient-brand rounded-xl text-primary-foreground">
-              Get Started
-            </Button>
+          <div className="mt-2 flex items-center justify-between gap-2 rounded-xl border border-border bg-card px-3 py-2">
+            <span className="flex min-w-0 items-center gap-2 text-sm font-semibold"><UserRound className="h-4 w-4 shrink-0 text-primary" /><span className="truncate">{user?.email}</span></span>
+            <Button variant="ghost" size="icon" className="rounded-xl" aria-label="Log out" onClick={() => { setOpen(false); void signOut(); }}><LogOut className="h-4 w-4" /></Button>
           </div>
         </div>
       ) : null}
