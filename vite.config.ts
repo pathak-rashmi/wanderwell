@@ -7,5 +7,8 @@ export default defineConfig({
 
   nitro: {
     preset: "node-server",
+    renderer: {
+      handler: "server/ssr-renderer",
+    },
   },
 });
